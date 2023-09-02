@@ -1,6 +1,7 @@
 pub mod instruction;
 use instruction::Instruction;
 use std::fs;
+use std::path::Path;
 
 const MEM_SIZE: usize = 4096;
 const STACK_HEIGHT: usize = 16;
@@ -15,7 +16,7 @@ pub struct Storage {
     variables: [u8; NUM_VARS],
 }
 
-/* 
+/*
 can do this eventually:
 impl Default for Point {
   fn default() -> Self {
@@ -46,25 +47,33 @@ impl Storage {
     }
 
     fn load_program(&mut self, file_name: String) {
+        let string_path = format!("./programs/{}", file_name);
+        let filepath = Path::new(&string_path);
+        assert!(filepath.exists(), "{:#?}", filepath.display());
+
         let contents: Vec<u8> = fs::read(
-            format!("../../../programs/{file_name}"),
+            filepath,
         ).expect(
-            "Should have been able to read the file",
+            &format!("path {} to file not found", filepath.display()),
         );
+
         let end_slot: usize = START_SLOT + contents.len();
         assert!(end_slot <= MEM_SIZE, "program out of bounds");
+
         let program_slice: &mut [u8] = &mut self.memory[START_SLOT .. end_slot];
         program_slice.iter_mut().enumerate().for_each(|(index, slot)| {
             *slot = contents[index];
         });
+
+        println!("{:#?}", program_slice);
     }
 
     fn load_font(&mut self) {
-        
+
     }
 
     fn get_instruction(&mut self) -> Instruction {
-        let raw_instruction: u16 = 
+        let raw_instruction: u16 =
             (self.memory[self.program_counter as usize] as u16) << 32
             + self.memory[self.program_counter as usize + 1] as u16;
         self.program_counter += 2;
