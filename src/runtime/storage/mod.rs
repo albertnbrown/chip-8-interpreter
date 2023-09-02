@@ -64,12 +64,14 @@ impl Storage {
         program_slice.iter_mut().enumerate().for_each(|(index, slot)| {
             *slot = contents[index];
         });
-
-        println!("{:#?}", program_slice);
     }
 
     fn load_font(&mut self) {
 
+    }
+
+    pub fn show_memory(&self) {
+        println!("{:?}", self.memory);
     }
 
     fn get_instruction(&mut self) -> Instruction {
