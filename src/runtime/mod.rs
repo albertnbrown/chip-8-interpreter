@@ -64,12 +64,13 @@ impl Runtime {
             
         if (self.sound_timer > 0) {
             self.audio.start_beep();
+            self.sound_timer -= 1;
         } else {
             self.audio.stop_beep();
         }
-        self.delay_timer -= 1;
-        self.sound_timer -= 1;
-
+        if (self.delay_timer > 0) {
+            self.delay_timer -= 1;
+        }
         let calculation_time: Duration = Instant::now().duration_since(start);
         // we can assume that our calculations won't take nearly enough time for this duration to ever underflow
         sleep(Duration::new(0, FRAME_TIME - calculation_time.subsec_nanos()))
