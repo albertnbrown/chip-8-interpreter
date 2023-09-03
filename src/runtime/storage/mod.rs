@@ -9,11 +9,12 @@ const NUM_VARS: usize = 16;
 const START_SLOT: usize = 0x0200;
 
 pub struct Storage {
-    memory: [u8; MEM_SIZE],
-    program_counter: u16, // u12 max for memory on these u16 vars
-    index_register: u16,
-    stack: [u16; STACK_HEIGHT],
-    variables: [u8; NUM_VARS],
+    // all the var size limits have custom implementations
+    memory: [usize; MEM_SIZE],
+    program_counter: usize,
+    index_register: usize,
+    stack: [usize; STACK_HEIGHT],
+    variables: [usize; NUM_VARS],
 }
 
 /*
@@ -60,9 +61,9 @@ impl Storage {
         let end_slot: usize = START_SLOT + contents.len();
         assert!(end_slot <= MEM_SIZE, "program out of bounds");
 
-        let program_slice: &mut [u8] = &mut self.memory[START_SLOT .. end_slot];
+        let program_slice: &mut [usize] = &mut self.memory[START_SLOT .. end_slot];
         program_slice.iter_mut().enumerate().for_each(|(index, slot)| {
-            *slot = contents[index];
+            *slot = contents[index] as usize;
         });
     }
 
@@ -75,16 +76,16 @@ impl Storage {
     }
 
     fn get_instruction(&mut self) -> Instruction {
-        let raw_instruction: u16 =
-            (self.memory[self.program_counter as usize] as u16) << 32
-            + self.memory[self.program_counter as usize + 1] as u16;
+        let raw_instruction: usize =
+            (self.memory[self.program_counter]) << 32
+            + self.memory[self.program_counter + 1];
         self.program_counter += 2;
         let instruction: Instruction = Instruction {
-            identifier: (raw_instruction & 0xF000) as u8,
-            x: (raw_instruction & 0x0F00) as u8,
-            y: (raw_instruction & 0x00F0) as u8,
-            n: (raw_instruction & 0x000F) as u8,
-            nn: (raw_instruction & 0x00FF) as u8,
+            identifier: (raw_instruction & 0xF000),
+            x: (raw_instruction & 0x0F00),
+            y: (raw_instruction & 0x00F0),
+            n: (raw_instruction & 0x000F),
+            nn: (raw_instruction & 0x00FF),
             nnn: raw_instruction & 0x0FFF,
         };
         return instruction;

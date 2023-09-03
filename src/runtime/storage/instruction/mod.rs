@@ -1,8 +1,9 @@
 pub struct Instruction {
-    pub identifier: u8, // u4
-    pub x: u8, // u4
-    pub y: u8, // u4
-    pub n: u8, // u4
-    pub nn: u8,
-    pub nnn: u16, // u12
+    // variable size is handled custom
+    pub identifier: usize,
+    pub x: usize,
+    pub y: usize,
+    pub n: usize,
+    pub nn: usize,
+    pub nnn: usize,
 }
