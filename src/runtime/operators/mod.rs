@@ -5,7 +5,6 @@ use rand::Rng;
 
 const VARIABLE_MODULUS: usize = 256; // the max value settable to a variable
 const BIT_LENGTH: usize = 8; // the number of bits in an element of memory
-const BYTE_SIZE: usize = 16;
 
 // function for function map array
 fn handle_error_case(_runtime: &mut Runtime, instruction: Instruction) {
@@ -15,16 +14,16 @@ fn handle_error_case(_runtime: &mut Runtime, instruction: Instruction) {
 // clear screen or pop stacked instruction
 pub fn handle0(runtime: &mut Runtime, instruction: Instruction) {
     // clear screen
-    if (instruction.nnn == 0x0E0) {
+    if instruction.nnn == 0x0E0 {
         runtime.display.clear();
         return;
     }
     // pop stacked instruction
-    if (instruction.nnn == 0x0EE) {
+    if instruction.nnn == 0x0EE {
         runtime.storage.pop_pc_from_stack();
         return;
     }
-    if (instruction.nnn == 0) {
+    if instruction.nnn == 0 {
         panic!("escaped program in memory");
     }
     panic!("unsupported program with 0NNN: Execute machine language routine opcode");
@@ -106,35 +105,40 @@ fn handle8XY4(runtime: &mut Runtime, instruction: Instruction) {
 
 // set vx to vx - vy with carry on LACK of underflow
 fn handle8XY5(runtime: &mut Runtime, instruction: Instruction) {
-    runtime.storage.variables[0x0F] = if runtime.storage.variables[instruction.x] < runtime.storage.variables[instruction.y] { 1 } else { 0 };
-    runtime.storage.variables[instruction.x] = if runtime.storage.variables[0x0F] == 1 {
-        runtime.storage.variables[instruction.x] + VARIABLE_MODULUS - runtime.storage.variables[instruction.y]
-    } else {
+    let carry: usize = if runtime.storage.variables[instruction.y] < runtime.storage.variables[instruction.x] { 1 } else { 0 };
+    runtime.storage.variables[instruction.x] = if carry == 1 {
         runtime.storage.variables[instruction.x] - runtime.storage.variables[instruction.y]
-    }
+    } else {
+        runtime.storage.variables[instruction.x] + VARIABLE_MODULUS - runtime.storage.variables[instruction.y]
+    };
+    runtime.storage.variables[0x0F] = carry;
 }
 
 // right shift vx with carry for underflow
 fn handle8XY6(runtime: &mut Runtime, instruction: Instruction) {
-    runtime.storage.variables[0x0F] = runtime.storage.variables[instruction.x] & 1; // grab lowest bit that'll be shifted out
+    let carry = runtime.storage.variables[instruction.x] & 1; // grab lowest bit that'll be shifted out
     runtime.storage.variables[instruction.x] >>= 1;
+    runtime.storage.variables[0x0F] = carry;
 }
 
 // set vx to vy - vx with carry on LACK of underflow
 fn handle8XY7(runtime: &mut Runtime, instruction: Instruction) {
-    runtime.storage.variables[0x0F] = if runtime.storage.variables[instruction.y] < runtime.storage.variables[instruction.x] { 1 } else { 0 };
-    runtime.storage.variables[instruction.x] = if runtime.storage.variables[0x0F] == 1 {
-        runtime.storage.variables[instruction.y] + VARIABLE_MODULUS - runtime.storage.variables[instruction.x]
-    } else {
+    let carry = if runtime.storage.variables[instruction.x] < runtime.storage.variables[instruction.y] { 1 } else { 0 };
+    runtime.storage.variables[instruction.x] = if carry == 1 {
         runtime.storage.variables[instruction.y] - runtime.storage.variables[instruction.x]
-    }
+    } else {
+        runtime.storage.variables[instruction.y] + VARIABLE_MODULUS - runtime.storage.variables[instruction.x]
+    };
+    runtime.storage.variables[0x0F] = carry;
 }
 
 // left shift vx with carry for overflow
 fn handle8XYE(runtime: &mut Runtime, instruction: Instruction) {
-    runtime.storage.variables[0x0F] = (runtime.storage.variables[instruction.x] >> (BYTE_SIZE - 1)) & 1; // grab highest bit that'll be shifted out
+    let carry = (runtime.storage.variables[instruction.x] >> (BIT_LENGTH - 1)) & 1; // grab highest bit that'll be shifted out
+    // quirk dependent: runtime.storage.variables[instruction.x] = runtime.storage.variables[instruction.y];
     runtime.storage.variables[instruction.x] <<= 1;
     runtime.storage.variables[instruction.x] %= VARIABLE_MODULUS;
+    runtime.storage.variables[0x0F] = carry;
 }
 
 // branching for several 8 opcode cases
