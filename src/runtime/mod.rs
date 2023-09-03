@@ -54,7 +54,7 @@ impl Runtime {
             storage,  display, audio, opcode_handlers, delay_timer: 0, sound_timer: 0};
     }
     
-    fn frame(&mut self) {
+    pub fn frame(&mut self) {
         let start: Instant = Instant::now();
         
         for _i in [..CALC_PER_FRAME] {
