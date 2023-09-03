@@ -1,5 +1,7 @@
 pub mod instruction;
+mod font;
 use instruction::Instruction;
+use font::FONT;
 use std::fs;
 use std::path::Path;
 
@@ -7,6 +9,7 @@ const MEM_SIZE: usize = 4096;
 const STACK_HEIGHT: usize = 16;
 const NUM_VARS: usize = 16;
 const START_SLOT: usize = 0x0200;
+const FONT_START: usize = 0x0050;
 
 pub struct Storage {
     // all the var size limits have custom implementations
@@ -68,14 +71,17 @@ impl Storage {
     }
 
     fn load_font(&mut self) {
-
+        let font_slice: &mut [usize] = &mut self.memory[FONT_START .. FONT_START + FONT.len()];
+        font_slice.iter_mut().enumerate().for_each(|(index, slot)| {
+            *slot = FONT[index];
+        });
     }
 
     pub fn show_memory(&self) {
         println!("{:?}", self.memory);
     }
 
-    fn get_instruction(&mut self) -> Instruction {
+    pub fn get_instruction(&mut self) -> Instruction {
         let raw_instruction: usize =
             (self.memory[self.program_counter]) << 32
             + self.memory[self.program_counter + 1];
