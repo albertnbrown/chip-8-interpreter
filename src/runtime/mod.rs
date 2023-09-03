@@ -1,21 +1,35 @@
-pub mod storage;
-pub mod display;
+extern crate sdl2;
+
+mod storage;
+mod display;
+mod audio;
 mod operators;
 
 use storage::{instruction::Instruction, Storage};
 use operators::*;
 use display::Display;
+use audio::Audio;
+
+use std::time::{Duration, Instant};
+use std::thread::sleep;
 
 const OPCODE_INITIAL_CASES: usize = 16;
+const CALC_PER_FRAME: usize = 12;
+const FRAME_TIME: u32 = 16666666; // in nanos
 
 pub struct Runtime {
     storage: Storage,
-    opcode_handlers: [fn(&mut Storage, &mut Display, Instruction);16],
+    display: Display,
+    audio: Audio,
+    opcode_handlers: [fn(&mut Runtime, Instruction); OPCODE_INITIAL_CASES],
+    delay_timer: usize,
+    sound_timer: usize,
 }
 
 impl Runtime {
-    pub fn initialize(&mut self, file_name: String) -> Runtime {
-        let opcode_handlers: [fn(&mut Storage, &mut Display, Instruction); OPCODE_INITIAL_CASES] = [
+    pub fn initialize(file_name: String) -> Runtime {
+        let sdl_context = sdl2::init().unwrap();
+        let opcode_handlers: [fn(&mut Runtime, Instruction); OPCODE_INITIAL_CASES] = [
             handle0,
             handle1,
             handle2,
@@ -34,10 +48,32 @@ impl Runtime {
             handleF,
         ];
         let storage: Storage = Storage::initialize(file_name);
-        return Runtime {storage,  opcode_handlers};
+        let display: Display = Display::initialize(&sdl_context);
+        let audio: Audio = Audio::initialize(&sdl_context);
+        return Runtime {
+            storage,  display, audio, opcode_handlers, delay_timer: 0, sound_timer: 0};
     }
-    // fn parse_instruction(&mut self, instruction: Instruction) -> Operation  {
+    
+    fn frame(&mut self) {
+        let start: Instant = Instant::now();
+        
+        for _i in [..CALC_PER_FRAME] {
+            let instruction: Instruction = self.storage.get_instruction();
+            self.opcode_handlers[instruction.identifier](self, instruction);
+        }
+            
+        if (self.sound_timer > 0) {
+            self.audio.start_beep();
+        } else {
+            self.audio.stop_beep();
+        }
+        self.delay_timer -= 1;
+        self.sound_timer -= 1;
 
-    // }
+        let calculation_time: Duration = Instant::now().duration_since(start);
+        // we can assume that our calculations won't take nearly enough time for this duration to ever underflow
+        sleep(Duration::new(0, FRAME_TIME - calculation_time.subsec_nanos()))
+    }
+
 }
 
