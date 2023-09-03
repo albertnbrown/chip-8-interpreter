@@ -174,7 +174,7 @@ pub fn handleA(runtime: &mut Runtime, instruction: Instruction) {
 
 // jump to nnn + v0
 pub fn handleB(runtime: &mut Runtime, instruction: Instruction) {
-    runtime.storage.program_counter = instruction.nnn + runtime.storage.variables[0];
+    runtime.storage.program_counter = instruction.nnn + runtime.storage.variables[instruction.x];
 }
 
 // set vx to nn & a random number
