@@ -16,8 +16,8 @@ use std::io::{stdin, stdout, Read, Write};
 
 const OPCODE_INITIAL_CASES: usize = 16;
 const CALC_PER_FRAME: usize = 12;
-const FRAME_TIME: u32 = 16666666; // in nanos
-const DEBUG: bool = true;
+const MIN_CLOCK_TIME: u32 = 1388888; // in nanos
+const DEBUG: bool = false;
 
 
 fn pause() {
@@ -64,27 +64,29 @@ impl Runtime {
     }
     
     pub fn frame(&mut self) {
-        let start: Instant = Instant::now();
-        
         for _i in 0..CALC_PER_FRAME {
+            let start: Instant = Instant::now();
             let instruction: Instruction = self.storage.get_instruction();
             if DEBUG { println!("{:?}", instruction); pause(); }
-            self.opcode_handlers[instruction.identifier](self, instruction); 
+            self.opcode_handlers[instruction.identifier](self, instruction);
+            let calculation_time = Instant::now().duration_since(start);
+            sleep(calculation_time.checked_sub(Duration::new(0, MIN_CLOCK_TIME)).unwrap_or_default());
+            // sleep_until(Duration::new(0, MIN_CLOCK_TIME - calculation_time.subsec_nanos()));
+            // let calculation_time: Duration = Instant::now().duration_since(start);
+            // we can assume that our calculations won't take nearly enough time for this duration to ever underflow
+            // if calculation_time.subsec_nanos() < MIN_CLOCK_TIME {
+                
+            // }
         }
             
-        if (self.sound_timer > 0) {
+        if self.sound_timer > 0 {
             self.audio.start_beep();
             self.sound_timer -= 1;
         } else {
             self.audio.stop_beep();
         }
-        if (self.delay_timer > 0) {
+        if self.delay_timer > 0 {
             self.delay_timer -= 1;
-        }
-        let calculation_time: Duration = Instant::now().duration_since(start);
-        // we can assume that our calculations won't take nearly enough time for this duration to ever underflow
-        if calculation_time.subsec_nanos() < FRAME_TIME {
-            sleep(Duration::new(0, FRAME_TIME - calculation_time.subsec_nanos()));
         }
     }
 }
