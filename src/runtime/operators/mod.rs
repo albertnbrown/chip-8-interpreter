@@ -217,14 +217,73 @@ pub fn handleE(runtime: &mut Runtime, instruction: Instruction) {
 
 }
 
+// set vx to the delay timer value
 fn handleFX07(runtime: &mut Runtime, instruction: Instruction) {
+    runtime.storage.variables[instruction.x] = runtime.delay_timer;
+}
 
+// set the delay timer value to vx
+fn handleFX15(runtime: &mut Runtime, instruction: Instruction) {
+    runtime.delay_timer = runtime.storage.variables[instruction.x];
+}
+
+// set the sound timer value to vx
+fn handleFX18(runtime: &mut Runtime, instruction: Instruction) {
+    runtime.sound_timer = runtime.storage.variables[instruction.x];
+}
+
+// add vx it index register
+fn handleFX1E(runtime: &mut Runtime, instruction: Instruction) {
+    runtime.storage.index_register += runtime.storage.variables[instruction.x];
+    if runtime.storage.index_register > 0x0FFF {
+        runtime.storage.variables[0x0F] = 1;
+    }
+}
+
+// set index register to font of vx
+fn handleFX29(runtime: &mut Runtime, instruction: Instruction) {
+    runtime.storage.index_register = runtime.storage.get_font_item_location(runtime.storage.variables[instruction.x]);
+}
+
+// decimal conversion of vx into memory starting with the index register
+fn handleFX33(runtime: &mut Runtime, instruction: Instruction) {
+    let vx = runtime.storage.variables[instruction.x];
+    let hundreds = (vx / 100) % 10;
+    let tens = (vx / 10) % 10;
+    let ones = vx % 10;
+    let start_address = runtime.storage.index_register;
+    runtime.storage.memory[start_address] = hundreds;
+    runtime.storage.memory[start_address + 1] = tens;
+    runtime.storage.memory[start_address + 2] = ones;
+}
+
+// store v0 to vx into memory starting with the index register
+fn handleFX55(runtime: &mut Runtime, instruction: Instruction) {
+    let start_address = runtime.storage.index_register;
+    for i in 0..(instruction.x+1) {
+        runtime.storage.memory[start_address + i] = runtime.storage.variables[i];
+    }
+}
+
+// load v0 to vx from memory starting with the index register
+fn handleFX65(runtime: &mut Runtime, instruction: Instruction) {
+    let start_address = runtime.storage.index_register;
+    for i in 0..(instruction.x+1) {
+        runtime.storage.variables[i] = runtime.storage.memory[start_address + i];
+    }
 }
 
 // grab bag opcodes
 pub fn handleF(runtime: &mut Runtime, instruction: Instruction) {
     match instruction.nn {
         0x07 => handleFX07(runtime, instruction),
+        0x15 => handleFX15(runtime, instruction),
+        0x18 => handleFX18(runtime, instruction),
+        0x1E => handleFX1E(runtime, instruction),
+        0x29 => handleFX29(runtime, instruction),
+        0x33 => handleFX33(runtime, instruction),
+        0x55 => handleFX55(runtime, instruction),
+        0x65 => handleFX65(runtime, instruction),
         _ => handle_error_case(runtime, instruction),
     }
 }

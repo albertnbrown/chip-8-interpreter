@@ -1,3 +1,5 @@
+pub const FONT_SPRITE_LENGTH: usize = 5;
+
 pub const FONT: [usize; 80] = [
     0xF0,
     0x90,

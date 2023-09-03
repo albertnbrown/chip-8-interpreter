@@ -1,7 +1,7 @@
 pub mod instruction;
 mod font;
 use instruction::Instruction;
-use font::FONT;
+use font::{FONT, FONT_SPRITE_LENGTH};
 use std::fs;
 use std::path::Path;
 
@@ -96,6 +96,13 @@ impl Storage {
             panic!("stack overflow in 2NNN");
         }
         self.stack[first_stack_free_pos] = self.program_counter;
+    }
+
+    pub fn get_font_item_location(&mut self, byte: usize) -> usize {
+        // make sure we only grab the first hex digit of the input
+        let char: usize = byte & 0x0F;
+        let location: usize = FONT_START + FONT_SPRITE_LENGTH * char;
+        return location;
     }
 
     pub fn get_instruction(&mut self) -> Instruction {
