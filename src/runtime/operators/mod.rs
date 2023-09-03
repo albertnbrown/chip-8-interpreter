@@ -74,38 +74,38 @@ pub fn handle7(runtime: &mut Runtime, instruction: Instruction) {
 }
 
 // set vx to vy
-fn handle80(runtime: &mut Runtime, instruction: Instruction) {
+fn handle8XY0(runtime: &mut Runtime, instruction: Instruction) {
     assert!(instruction.n == 0);
     runtime.storage.variables[instruction.x] = runtime.storage.variables[instruction.y];
 }
 
 // set vx to vx | vy
-fn handle81(runtime: &mut Runtime, instruction: Instruction) {
+fn handle8XY1(runtime: &mut Runtime, instruction: Instruction) {
     assert!(instruction.n == 1);
     runtime.storage.variables[instruction.x] |= runtime.storage.variables[instruction.y];
 }
 
 // set vx to vx & vy
-fn handle82(runtime: &mut Runtime, instruction: Instruction) {
+fn handle8XY2(runtime: &mut Runtime, instruction: Instruction) {
     assert!(instruction.n == 2);
     runtime.storage.variables[instruction.x] &= runtime.storage.variables[instruction.y];
 }
 
 // set vx to vx ^ vy
-fn handle83(runtime: &mut Runtime, instruction: Instruction) {
+fn handle8XY3(runtime: &mut Runtime, instruction: Instruction) {
     assert!(instruction.n == 3);
     runtime.storage.variables[instruction.x] ^= runtime.storage.variables[instruction.y];
 }
 
 // set vx to vx + vy with carry on overflow
-fn handle84(runtime: &mut Runtime, instruction: Instruction) {
+fn handle8XY4(runtime: &mut Runtime, instruction: Instruction) {
     runtime.storage.variables[instruction.x] += runtime.storage.variables[instruction.y];
     runtime.storage.variables[0x0F] = if runtime.storage.variables[instruction.x] > VARIABLE_MODULUS { 1 } else { 0 };
     runtime.storage.variables[instruction.x] %= VARIABLE_MODULUS;
 }
 
 // set vx to vx - vy with carry on LACK of underflow
-fn handle85(runtime: &mut Runtime, instruction: Instruction) {
+fn handle8XY5(runtime: &mut Runtime, instruction: Instruction) {
     runtime.storage.variables[0x0F] = if runtime.storage.variables[instruction.x] < runtime.storage.variables[instruction.y] { 1 } else { 0 };
     runtime.storage.variables[instruction.x] = if runtime.storage.variables[0x0F] == 1 {
         runtime.storage.variables[instruction.x] + VARIABLE_MODULUS - runtime.storage.variables[instruction.y]
@@ -115,13 +115,13 @@ fn handle85(runtime: &mut Runtime, instruction: Instruction) {
 }
 
 // right shift vx with carry for underflow
-fn handle86(runtime: &mut Runtime, instruction: Instruction) {
+fn handle8XY6(runtime: &mut Runtime, instruction: Instruction) {
     runtime.storage.variables[0x0F] = runtime.storage.variables[instruction.x] & 1; // grab lowest bit that'll be shifted out
     runtime.storage.variables[instruction.x] >>= 1;
 }
 
 // set vx to vy - vx with carry on LACK of underflow
-fn handle87(runtime: &mut Runtime, instruction: Instruction) {
+fn handle8XY7(runtime: &mut Runtime, instruction: Instruction) {
     runtime.storage.variables[0x0F] = if runtime.storage.variables[instruction.y] < runtime.storage.variables[instruction.x] { 1 } else { 0 };
     runtime.storage.variables[instruction.x] = if runtime.storage.variables[0x0F] == 1 {
         runtime.storage.variables[instruction.y] + VARIABLE_MODULUS - runtime.storage.variables[instruction.x]
@@ -131,7 +131,7 @@ fn handle87(runtime: &mut Runtime, instruction: Instruction) {
 }
 
 // left shift vx with carry for overflow
-fn handle8E(runtime: &mut Runtime, instruction: Instruction) {
+fn handle8XYE(runtime: &mut Runtime, instruction: Instruction) {
     runtime.storage.variables[0x0F] = (runtime.storage.variables[instruction.x] >> (BYTE_SIZE - 1)) & 1; // grab highest bit that'll be shifted out
     runtime.storage.variables[instruction.x] <<= 1;
     runtime.storage.variables[instruction.x] %= VARIABLE_MODULUS;
@@ -140,15 +140,15 @@ fn handle8E(runtime: &mut Runtime, instruction: Instruction) {
 // branching for several 8 opcode cases
 pub fn handle8(runtime: &mut Runtime, instruction: Instruction) {
     match instruction.n {
-        0x0 => handle80(runtime, instruction),
-        0x1 => handle81(runtime, instruction),
-        0x2 => handle82(runtime, instruction),
-        0x3 => handle83(runtime, instruction),
-        0x4 => handle84(runtime, instruction),
-        0x5 => handle85(runtime, instruction),
-        0x6 => handle86(runtime, instruction),
-        0x7 => handle87(runtime, instruction),
-        0xE => handle8E(runtime, instruction),
+        0x0 => handle8XY0(runtime, instruction),
+        0x1 => handle8XY1(runtime, instruction),
+        0x2 => handle8XY2(runtime, instruction),
+        0x3 => handle8XY3(runtime, instruction),
+        0x4 => handle8XY4(runtime, instruction),
+        0x5 => handle8XY5(runtime, instruction),
+        0x6 => handle8XY6(runtime, instruction),
+        0x7 => handle8XY7(runtime, instruction),
+        0xE => handle8XYE(runtime, instruction),
         _ => handle_error_case(runtime, instruction),
     }
 }
@@ -217,9 +217,14 @@ pub fn handleE(runtime: &mut Runtime, instruction: Instruction) {
 
 }
 
+fn handleFX07(runtime: &mut Runtime, instruction: Instruction) {
+
+}
+
 // grab bag opcodes
 pub fn handleF(runtime: &mut Runtime, instruction: Instruction) {
     match instruction.nn {
+        0x07 => handleFX07(runtime, instruction),
         _ => handle_error_case(runtime, instruction),
     }
 }
