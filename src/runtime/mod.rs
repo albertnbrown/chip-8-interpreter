@@ -62,7 +62,7 @@ impl Runtime {
         return Runtime {
             storage,  display, audio, opcode_handlers, delay_timer: 0, sound_timer: 0};
     }
-    
+
     pub fn frame(&mut self) {
         for _i in 0..CALC_PER_FRAME {
             let start: Instant = Instant::now();
@@ -71,14 +71,8 @@ impl Runtime {
             self.opcode_handlers[instruction.identifier](self, instruction);
             let calculation_time = Instant::now().duration_since(start);
             sleep(calculation_time.checked_sub(Duration::new(0, MIN_CLOCK_TIME)).unwrap_or_default());
-            // sleep_until(Duration::new(0, MIN_CLOCK_TIME - calculation_time.subsec_nanos()));
-            // let calculation_time: Duration = Instant::now().duration_since(start);
-            // we can assume that our calculations won't take nearly enough time for this duration to ever underflow
-            // if calculation_time.subsec_nanos() < MIN_CLOCK_TIME {
-                
-            // }
         }
-            
+
         if self.sound_timer > 0 {
             self.audio.start_beep();
             self.sound_timer -= 1;
