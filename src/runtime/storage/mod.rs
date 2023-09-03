@@ -53,7 +53,7 @@ impl Storage {
     }
 
     fn load_program(&mut self, file_name: String) {
-        let string_path = format!("./programs/{}", file_name);
+        let string_path = format!("./{}", file_name);
         let filepath = Path::new(&string_path);
         assert!(filepath.exists(), "{:#?}", filepath.display());
 
