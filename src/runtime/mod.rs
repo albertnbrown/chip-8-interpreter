@@ -36,6 +36,7 @@ pub struct Runtime {
     pub delay_timer: usize,
     pub sound_timer: usize,
     pub device_state: DeviceState,
+    pub current_key_press: Option<u16>,
 }
 
 impl Runtime {
@@ -64,7 +65,14 @@ impl Runtime {
         let audio: Audio = Audio::initialize(&sdl_context);
         let device_state: DeviceState = DeviceState::new();
         return Runtime {
-            storage,  display, audio, opcode_handlers, delay_timer: 0, sound_timer: 0, device_state
+            storage,
+            display,
+            audio,
+            opcode_handlers,
+            delay_timer: 0,
+            sound_timer: 0,
+            device_state,
+            current_key_press: None,
         };
     }
 

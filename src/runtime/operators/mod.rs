@@ -1,7 +1,10 @@
 extern crate rand;
 
-use crate::runtime::{Runtime, Instruction, display::{CHIP8_WIDTH, CHIP8_HEIGHT}};
+mod keyboard;
+
+use crate::runtime::{Runtime, Instruction, display::{CHIP8_WIDTH, CHIP8_HEIGHT}, DeviceQuery};
 use rand::Rng;
+use std::collections::HashSet;
 
 const VARIABLE_MODULUS: usize = 256; // the max value settable to a variable
 const BIT_LENGTH: usize = 8; // the number of bits in an element of memory
@@ -217,13 +220,48 @@ pub fn handleD(runtime: &mut Runtime, instruction: Instruction) {
     }
 }
 
+// skip if key pressed/notpressed
 pub fn handleE(runtime: &mut Runtime, instruction: Instruction) {
-
+    let target_key = keyboard::KEY_MAP[runtime.storage.variables[instruction.x]];
+    let keys = runtime.device_state.get_keys();
+    if instruction.nn == 0x9E {
+        if keys.contains(&target_key) {
+            runtime.storage.program_counter += 2;
+        }
+        return;
+    }
+    if instruction.nn == 0xA1 {
+        if !keys.contains(&(target_key as u16)) {
+            runtime.storage.program_counter += 2;
+        }
+        return;
+    }
+    panic!("bad E opcode nn: {:?}", instruction);
 }
 
 // set vx to the delay timer value
 fn handleFX07(runtime: &mut Runtime, instruction: Instruction) {
     runtime.storage.variables[instruction.x] = runtime.delay_timer;
+}
+
+// get keypress to vx
+fn handleFX0A(runtime: &mut Runtime, instruction: Instruction) {
+    let pressed_keys = runtime.device_state.get_keys();
+    let pressed_key_set = pressed_keys.iter().collect::<HashSet<_>>();
+    let key_set_ref = keyboard::KEY_MAP.iter().collect::<HashSet<_>>();
+    let pressed_device_keys: Vec<&&u16> = pressed_key_set.intersection(&key_set_ref).collect();
+    
+    if runtime.current_key_press.is_some() && !pressed_device_keys.contains(&&&runtime.current_key_press.unwrap()) {
+        let key_value = keyboard::KEY_MAP.iter().position(|e| *e==runtime.current_key_press.unwrap()).unwrap();
+        runtime.storage.variables[instruction.x] = key_value;
+        runtime.current_key_press = None;
+        return;
+    }
+    if runtime.current_key_press.is_none() && pressed_device_keys.len() != 0 {
+        let found_key = **pressed_device_keys[0];
+        runtime.current_key_press = Some(found_key);
+    }
+    runtime.storage.program_counter -= 2;
 }
 
 // set the delay timer value to vx
@@ -281,6 +319,7 @@ fn handleFX65(runtime: &mut Runtime, instruction: Instruction) {
 pub fn handleF(runtime: &mut Runtime, instruction: Instruction) {
     match instruction.nn {
         0x07 => handleFX07(runtime, instruction),
+        0x0A => handleFX0A(runtime, instruction),
         0x15 => handleFX15(runtime, instruction),
         0x18 => handleFX18(runtime, instruction),
         0x1E => handleFX1E(runtime, instruction),
