@@ -39,7 +39,7 @@ impl Storage {
     pub fn initialize(file_name: String) -> Storage{
         let mut storage: Storage = Storage {
             memory: [0; MEM_SIZE],
-            program_counter: 0,
+            program_counter: START_SLOT, // start of the program
             index_register: 0,
             stack: [0; STACK_HEIGHT],
             variables: [0; NUM_VARS],
