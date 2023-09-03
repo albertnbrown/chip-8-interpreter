@@ -1,3 +1,4 @@
+#[derive(Debug)]
 pub struct Instruction {
     // variable size is handled custom
     pub identifier: usize,

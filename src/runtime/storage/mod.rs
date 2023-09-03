@@ -10,14 +10,16 @@ const STACK_HEIGHT: usize = 16;
 const NUM_VARS: usize = 16;
 const START_SLOT: usize = 0x0200;
 const FONT_START: usize = 0x0050;
+const BYTE_LENGTH: usize = 8;
+const HALF_BYTE: usize = 4;
 
 pub struct Storage {
     // all the var size limits have custom implementations
-    memory: [usize; MEM_SIZE],
-    program_counter: usize,
-    index_register: usize,
-    stack: [usize; STACK_HEIGHT],
-    variables: [usize; NUM_VARS],
+    pub memory: [usize; MEM_SIZE],
+    pub program_counter: usize,
+    pub index_register: usize,
+    pub stack: [usize; STACK_HEIGHT],
+    pub variables: [usize; NUM_VARS],
 }
 
 /*
@@ -81,15 +83,24 @@ impl Storage {
         println!("{:?}", self.memory);
     }
 
+    pub fn pop_pc_from_stack(&mut self) {
+        let maybe_last_stack_element_pos = self.stack.iter().rev().position(|&x| x != 0);
+        let last_stack_element_pos = maybe_last_stack_element_pos.unwrap();
+        let last_stack_element = self.stack[last_stack_element_pos];
+        self.stack[last_stack_element_pos] = 0;
+        self.program_counter = last_stack_element;
+    }
+
     pub fn get_instruction(&mut self) -> Instruction {
+        // grab the two bytes starting at PC and collate them
         let raw_instruction: usize =
-            (self.memory[self.program_counter]) << 32
+            (self.memory[self.program_counter] << BYTE_LENGTH)
             + self.memory[self.program_counter + 1];
         self.program_counter += 2;
         let instruction: Instruction = Instruction {
-            identifier: (raw_instruction & 0xF000),
-            x: (raw_instruction & 0x0F00),
-            y: (raw_instruction & 0x00F0),
+            identifier: (raw_instruction & 0xF000) >> (BYTE_LENGTH + HALF_BYTE),
+            x: (raw_instruction & 0x0F00) >> BYTE_LENGTH,
+            y: (raw_instruction & 0x00F0) >> HALF_BYTE,
             n: (raw_instruction & 0x000F),
             nn: (raw_instruction & 0x00FF),
             nnn: raw_instruction & 0x0FFF,
