@@ -51,7 +51,7 @@ impl Display {
                 let canvas_y = y as u32 * SCALE_FACTOR;
 
                 self.representation[y][x] ^= col;
-                if (!carry && col && !self.representation[y][x]) {
+                if !carry && col && !self.representation[y][x] {
                     carry = true;
                 }
 
