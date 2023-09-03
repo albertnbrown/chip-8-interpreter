@@ -137,28 +137,20 @@ fn handle8E(runtime: &mut Runtime, instruction: Instruction) {
     runtime.storage.variables[instruction.x] %= VARIABLE_MODULUS;
 }
 
-const op8_cases: [fn(&mut Runtime, Instruction); BYTE_SIZE] = [
-    handle80,
-    handle81,
-    handle82,
-    handle83,
-    handle84,
-    handle85,
-    handle86,
-    handle87,
-    handle_error_case,
-    handle_error_case,
-    handle_error_case,
-    handle_error_case,
-    handle_error_case,
-    handle_error_case,
-    handle8E,
-    handle_error_case,
-];
-
 // branching for several 8 opcode cases
 pub fn handle8(runtime: &mut Runtime, instruction: Instruction) {
-    op8_cases[instruction.n](runtime, instruction);
+    match instruction.n {
+        0x0 => handle80(runtime, instruction),
+        0x1 => handle81(runtime, instruction),
+        0x2 => handle82(runtime, instruction),
+        0x3 => handle83(runtime, instruction),
+        0x4 => handle84(runtime, instruction),
+        0x5 => handle85(runtime, instruction),
+        0x6 => handle86(runtime, instruction),
+        0x7 => handle87(runtime, instruction),
+        0xE => handle8E(runtime, instruction),
+        _ => handle_error_case(runtime, instruction),
+    }
 }
 
 // skip if vx != vy
@@ -225,6 +217,9 @@ pub fn handleE(runtime: &mut Runtime, instruction: Instruction) {
 
 }
 
+// grab bag opcodes
 pub fn handleF(runtime: &mut Runtime, instruction: Instruction) {
-
+    match instruction.nn {
+        _ => handle_error_case(runtime, instruction),
+    }
 }
