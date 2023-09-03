@@ -1,10 +1,12 @@
 extern crate sdl2;
+extern crate keyboard_query;
 
 mod storage;
 mod display;
 mod audio;
 mod operators;
 
+use keyboard_query::{DeviceState, DeviceQuery};
 use storage::{instruction::Instruction, Storage};
 use operators::*;
 use display::Display;
@@ -33,6 +35,7 @@ pub struct Runtime {
     opcode_handlers: [fn(&mut Runtime, Instruction); OPCODE_INITIAL_CASES],
     pub delay_timer: usize,
     pub sound_timer: usize,
+    pub device_state: DeviceState,
 }
 
 impl Runtime {
@@ -59,8 +62,10 @@ impl Runtime {
         let storage: Storage = Storage::initialize(file_name);
         let display: Display = Display::initialize(&sdl_context);
         let audio: Audio = Audio::initialize(&sdl_context);
+        let device_state: DeviceState = DeviceState::new();
         return Runtime {
-            storage,  display, audio, opcode_handlers, delay_timer: 0, sound_timer: 0};
+            storage,  display, audio, opcode_handlers, delay_timer: 0, sound_timer: 0, device_state
+        };
     }
 
     pub fn frame(&mut self) {

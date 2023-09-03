@@ -5,6 +5,7 @@ edition = "2021"
 
 [dependencies]
 ctrlc = "3.4.1"
+keyboard_query = "0.1.0"
 rand = "0.8.5"
 
 [dependencies.sdl2]
