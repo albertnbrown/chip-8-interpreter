@@ -12,18 +12,27 @@ use audio::Audio;
 
 use std::time::{Duration, Instant};
 use std::thread::sleep;
+use std::io::{stdin, stdout, Read, Write};
 
 const OPCODE_INITIAL_CASES: usize = 16;
 const CALC_PER_FRAME: usize = 12;
 const FRAME_TIME: u32 = 16666666; // in nanos
+const DEBUG: bool = false;
 
+
+fn pause() {
+    let mut stdout = stdout();
+    stdout.write(b"Press Enter to continue...").unwrap();
+    stdout.flush().unwrap();
+    stdin().read(&mut [0]).unwrap();
+}
 pub struct Runtime {
-    storage: Storage,
-    display: Display,
-    audio: Audio,
+    pub storage: Storage,
+    pub display: Display,
+    pub audio: Audio,
     opcode_handlers: [fn(&mut Runtime, Instruction); OPCODE_INITIAL_CASES],
-    delay_timer: usize,
-    sound_timer: usize,
+    pub delay_timer: usize,
+    pub sound_timer: usize,
 }
 
 impl Runtime {
@@ -57,9 +66,10 @@ impl Runtime {
     pub fn frame(&mut self) {
         let start: Instant = Instant::now();
         
-        for _i in [..CALC_PER_FRAME] {
+        for _i in 0..CALC_PER_FRAME {
             let instruction: Instruction = self.storage.get_instruction();
-            self.opcode_handlers[instruction.identifier](self, instruction);
+            if DEBUG { pause(); println!("{:?}", instruction); }
+            self.opcode_handlers[instruction.identifier](self, instruction); 
         }
             
         if (self.sound_timer > 0) {
@@ -73,8 +83,9 @@ impl Runtime {
         }
         let calculation_time: Duration = Instant::now().duration_since(start);
         // we can assume that our calculations won't take nearly enough time for this duration to ever underflow
-        sleep(Duration::new(0, FRAME_TIME - calculation_time.subsec_nanos()))
+        if calculation_time.subsec_nanos() < FRAME_TIME {
+            sleep(Duration::new(0, FRAME_TIME - calculation_time.subsec_nanos()));
+        }
     }
-
 }
 
