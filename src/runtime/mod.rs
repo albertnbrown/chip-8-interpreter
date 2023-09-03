@@ -19,7 +19,7 @@ use std::io::{stdin, stdout, Read, Write};
 const OPCODE_INITIAL_CASES: usize = 16;
 const CALC_PER_FRAME: usize = 12;
 const MIN_CLOCK_TIME: u32 = 1388888; // in nanos
-const DEBUG: bool = true;
+const DEBUG: bool = false;
 
 
 fn pause() {
