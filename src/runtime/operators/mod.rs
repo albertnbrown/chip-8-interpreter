@@ -1,65 +1,65 @@
-use crate::runtime::*;
+use crate::runtime::{Runtime, Instruction};
 
-pub fn handle0(storage: &mut Storage, display: &mut Display, instruction: Instruction) {
+pub fn handle0(runtime: &mut Runtime, instruction: Instruction) {
     
 }
 
-pub fn handle1(storage: &mut Storage, display: &mut Display, instruction: Instruction) {
+pub fn handle1(runtime: &mut Runtime, instruction: Instruction) {
 
 }
 
-pub fn handle2(storage: &mut Storage, display: &mut Display, instruction: Instruction) {
+pub fn handle2(runtime: &mut Runtime, instruction: Instruction) {
 
 }
 
-pub fn handle3(storage: &mut Storage, display: &mut Display, instruction: Instruction) {
+pub fn handle3(runtime: &mut Runtime, instruction: Instruction) {
 
 }
 
-pub fn handle4(storage: &mut Storage, display: &mut Display, instruction: Instruction) {
+pub fn handle4(runtime: &mut Runtime, instruction: Instruction) {
 
 }
 
-pub fn handle5(storage: &mut Storage, display: &mut Display, instruction: Instruction) {
+pub fn handle5(runtime: &mut Runtime, instruction: Instruction) {
 
 }
 
-pub fn handle6(storage: &mut Storage, display: &mut Display, instruction: Instruction) {
+pub fn handle6(runtime: &mut Runtime, instruction: Instruction) {
 
 }
 
-pub fn handle7(storage: &mut Storage, display: &mut Display, instruction: Instruction) {
+pub fn handle7(runtime: &mut Runtime, instruction: Instruction) {
 
 }
 
-pub fn handle8(storage: &mut Storage, display: &mut Display, instruction: Instruction) {
+pub fn handle8(runtime: &mut Runtime, instruction: Instruction) {
 
 }
 
-pub fn handle9(storage: &mut Storage, display: &mut Display, instruction: Instruction) {
+pub fn handle9(runtime: &mut Runtime, instruction: Instruction) {
 
 }
 
-pub fn handleA(storage: &mut Storage, display: &mut Display, instruction: Instruction) {
+pub fn handleA(runtime: &mut Runtime, instruction: Instruction) {
 
 }
 
-pub fn handleB(storage: &mut Storage, display: &mut Display, instruction: Instruction) {
+pub fn handleB(runtime: &mut Runtime, instruction: Instruction) {
 
 }
 
-pub fn handleC(storage: &mut Storage, display: &mut Display, instruction: Instruction) {
+pub fn handleC(runtime: &mut Runtime, instruction: Instruction) {
 
 }
 
-pub fn handleD(storage: &mut Storage, display: &mut Display, instruction: Instruction) {
+pub fn handleD(runtime: &mut Runtime, instruction: Instruction) {
 
 }
 
-pub fn handleE(storage: &mut Storage, display: &mut Display, instruction: Instruction) {
+pub fn handleE(runtime: &mut Runtime, instruction: Instruction) {
 
 }
 
-pub fn handleF(storage: &mut Storage, display: &mut Display, instruction: Instruction) {
+pub fn handleF(runtime: &mut Runtime, instruction: Instruction) {
 
 }
