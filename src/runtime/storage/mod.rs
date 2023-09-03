@@ -84,11 +84,18 @@ impl Storage {
     }
 
     pub fn pop_pc_from_stack(&mut self) {
-        let maybe_last_stack_element_pos = self.stack.iter().rev().position(|&x| x != 0);
-        let last_stack_element_pos = maybe_last_stack_element_pos.unwrap();
+        let last_stack_element_pos = self.stack.iter().position(|&x| x == 0).unwrap() - 1;
         let last_stack_element = self.stack[last_stack_element_pos];
         self.stack[last_stack_element_pos] = 0;
         self.program_counter = last_stack_element;
+    }
+
+    pub fn add_pc_to_stack(&mut self) {
+        let first_stack_free_pos = self.stack.iter().position(|&x| x == 0).unwrap();
+        if first_stack_free_pos == STACK_HEIGHT {
+            panic!("stack overflow in 2NNN");
+        }
+        self.stack[first_stack_free_pos] = self.program_counter;
     }
 
     pub fn get_instruction(&mut self) -> Instruction {
