@@ -12,8 +12,13 @@ fn main() {
     }).expect("Error setting Ctrl-C handler");
     let args: Vec<String> = env::args().collect();
     println!("{:?}", args);
+    let mode_arg = if args.len() < 3 {
+        "0"
+    } else {
+        args[2].as_str()
+    };
     let mode: Mode;
-    match args[2].as_str() {
+    match mode_arg {
         "0" => mode = Mode::CHIP8,
         "1" => mode = Mode::SCHIP,
         "2" => mode = Mode::X0CHIP,
