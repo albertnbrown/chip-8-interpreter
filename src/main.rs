@@ -1,5 +1,5 @@
 mod runtime;
-use runtime::Runtime;
+use runtime::{Runtime,Mode};
 use std::env;
 use std::process::exit;
 use ctrlc;
@@ -12,7 +12,14 @@ fn main() {
     }).expect("Error setting Ctrl-C handler");
     let args: Vec<String> = env::args().collect();
     println!("{:?}", args);
-    let mut runtime: Runtime = Runtime::initialize(args[1].clone());
+    let mode: Mode;
+    match args[2].as_str() {
+        "0" => mode = Mode::CHIP8,
+        "1" => mode = Mode::SCHIP,
+        "2" => mode = Mode::X0CHIP,
+        _ => panic!("bad compatability mode selected: {}", args[2]),
+    }
+    let mut runtime: Runtime = Runtime::initialize(args[1].clone(), mode);
     loop {
         runtime.frame();
     }

@@ -19,8 +19,14 @@ use std::io::{stdin, stdout, Read, Write};
 const OPCODE_INITIAL_CASES: usize = 16;
 const CALC_PER_FRAME: usize = 12;
 const MIN_CLOCK_TIME: u32 = 1388888; // in nanos
-const DEBUG: bool = false;
+const DEBUG: bool = true;
 
+#[derive(PartialEq)]
+pub enum Mode {
+    CHIP8,
+    SCHIP,
+    X0CHIP,
+}
 
 fn pause() {
     let mut stdout = stdout();
@@ -29,6 +35,7 @@ fn pause() {
     stdin().read(&mut [0]).unwrap();
 }
 pub struct Runtime {
+    pub mode: Mode,
     pub storage: Storage,
     pub display: Display,
     pub audio: Audio,
@@ -40,7 +47,7 @@ pub struct Runtime {
 }
 
 impl Runtime {
-    pub fn initialize(file_name: String) -> Runtime {
+    pub fn initialize(file_name: String, mode: Mode) -> Runtime {
         let sdl_context = sdl2::init().unwrap();
         let opcode_handlers: [fn(&mut Runtime, Instruction); OPCODE_INITIAL_CASES] = [
             handle0,
@@ -65,6 +72,7 @@ impl Runtime {
         let audio: Audio = Audio::initialize(&sdl_context);
         let device_state: DeviceState = DeviceState::new();
         return Runtime {
+            mode,
             storage,
             display,
             audio,

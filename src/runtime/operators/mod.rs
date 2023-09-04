@@ -2,7 +2,7 @@ extern crate rand;
 
 mod keyboard;
 
-use crate::runtime::{Runtime, Instruction, display::{CHIP8_WIDTH, CHIP8_HEIGHT}, DeviceQuery};
+use crate::runtime::{Runtime, Instruction, display::{CHIP8_WIDTH, CHIP8_HEIGHT}, DeviceQuery, Mode};
 use rand::Rng;
 use std::collections::HashSet;
 
@@ -77,26 +77,31 @@ pub fn handle7(runtime: &mut Runtime, instruction: Instruction) {
 
 // set vx to vy
 fn handle8XY0(runtime: &mut Runtime, instruction: Instruction) {
-    assert!(instruction.n == 0);
     runtime.storage.variables[instruction.x] = runtime.storage.variables[instruction.y];
 }
 
 // set vx to vx | vy
 fn handle8XY1(runtime: &mut Runtime, instruction: Instruction) {
-    assert!(instruction.n == 1);
     runtime.storage.variables[instruction.x] |= runtime.storage.variables[instruction.y];
+    if runtime.mode == Mode::CHIP8 {
+        runtime.storage.variables[0x0F] = 0;
+    }
 }
 
 // set vx to vx & vy
 fn handle8XY2(runtime: &mut Runtime, instruction: Instruction) {
-    assert!(instruction.n == 2);
     runtime.storage.variables[instruction.x] &= runtime.storage.variables[instruction.y];
+    if runtime.mode == Mode::CHIP8 {
+        runtime.storage.variables[0x0F] = 0;
+    }
 }
 
 // set vx to vx ^ vy
 fn handle8XY3(runtime: &mut Runtime, instruction: Instruction) {
-    assert!(instruction.n == 3);
     runtime.storage.variables[instruction.x] ^= runtime.storage.variables[instruction.y];
+    if runtime.mode == Mode::CHIP8 {
+        runtime.storage.variables[0x0F] = 0;
+    }
 }
 
 // set vx to vx + vy with carry on overflow
@@ -119,6 +124,9 @@ fn handle8XY5(runtime: &mut Runtime, instruction: Instruction) {
 
 // right shift vx with carry for underflow
 fn handle8XY6(runtime: &mut Runtime, instruction: Instruction) {
+    if runtime.mode != Mode::SCHIP {
+        runtime.storage.variables[instruction.x] = runtime.storage.variables[instruction.y];
+    }
     let carry = runtime.storage.variables[instruction.x] & 1; // grab lowest bit that'll be shifted out
     runtime.storage.variables[instruction.x] >>= 1;
     runtime.storage.variables[0x0F] = carry;
@@ -137,8 +145,10 @@ fn handle8XY7(runtime: &mut Runtime, instruction: Instruction) {
 
 // left shift vx with carry for overflow
 fn handle8XYE(runtime: &mut Runtime, instruction: Instruction) {
+    if runtime.mode != Mode::SCHIP {
+        runtime.storage.variables[instruction.x] = runtime.storage.variables[instruction.y];
+    }
     let carry = (runtime.storage.variables[instruction.x] >> (BIT_LENGTH - 1)) & 1; // grab highest bit that'll be shifted out
-    // quirk dependent: runtime.storage.variables[instruction.x] = runtime.storage.variables[instruction.y];
     runtime.storage.variables[instruction.x] <<= 1;
     runtime.storage.variables[instruction.x] %= VARIABLE_MODULUS;
     runtime.storage.variables[0x0F] = carry;
@@ -174,7 +184,12 @@ pub fn handleA(runtime: &mut Runtime, instruction: Instruction) {
 
 // jump to nnn + v0
 pub fn handleB(runtime: &mut Runtime, instruction: Instruction) {
-    runtime.storage.program_counter = instruction.nnn + runtime.storage.variables[instruction.x];
+    let jump_increment = if runtime.mode == Mode::SCHIP {
+        runtime.storage.variables[instruction.x]
+    } else {
+        runtime.storage.variables[0]
+    };
+    runtime.storage.program_counter = instruction.nnn + jump_increment;
 }
 
 // set vx to nn & a random number
@@ -194,14 +209,14 @@ pub fn handleD(runtime: &mut Runtime, instruction: Instruction) {
     let mut new_flips: [[bool; CHIP8_WIDTH]; CHIP8_HEIGHT] = [[false; CHIP8_WIDTH]; CHIP8_HEIGHT];
 
     // only do rows that stay on the screen
-    let imax: usize = if vy + instruction.n > CHIP8_HEIGHT {
+    let imax: usize = if vy + instruction.n > CHIP8_HEIGHT && runtime.mode != Mode::X0CHIP {
         CHIP8_HEIGHT - vy
     } else {
         instruction.n
     };
 
     // only draw the sprite in the amount of the row left on the screen
-    let jmax: usize = if vx + BIT_LENGTH > CHIP8_WIDTH {
+    let jmax: usize = if vx + BIT_LENGTH > CHIP8_WIDTH && runtime.mode != Mode::X0CHIP {
         CHIP8_WIDTH - vx
     } else {
         BIT_LENGTH
@@ -211,7 +226,7 @@ pub fn handleD(runtime: &mut Runtime, instruction: Instruction) {
         let sprite = runtime.storage.memory[index + i];
 
         for j in 0..jmax {
-            new_flips[vy + i][vx + j] = sprite & (1 << (BIT_LENGTH - 1 - j)) > 0;
+            new_flips[(vy + i) % CHIP8_HEIGHT][(vx + j) % CHIP8_WIDTH] = sprite & (1 << (BIT_LENGTH - 1 - j)) > 0;
         }
     }
 
@@ -305,6 +320,9 @@ fn handleFX55(runtime: &mut Runtime, instruction: Instruction) {
     for i in 0..(instruction.x+1) {
         runtime.storage.memory[start_address + i] = runtime.storage.variables[i];
     }
+    if runtime.mode == Mode::CHIP8 || runtime.mode == Mode::X0CHIP {
+        runtime.storage.index_register += instruction.x + 1;
+    }
 }
 
 // load v0 to vx from memory starting with the index register
@@ -312,6 +330,9 @@ fn handleFX65(runtime: &mut Runtime, instruction: Instruction) {
     let start_address = runtime.storage.index_register;
     for i in 0..(instruction.x+1) {
         runtime.storage.variables[i] = runtime.storage.memory[start_address + i];
+    }
+    if runtime.mode == Mode::CHIP8 || runtime.mode == Mode::X0CHIP {
+        runtime.storage.index_register += instruction.x + 1;
     }
 }
 
